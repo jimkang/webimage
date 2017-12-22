@@ -80,6 +80,8 @@ Usage
 
 Result:
 
+![smidgeo sample](https://user-images.githubusercontent.com/324298/34311923-912e0406-e72e-11e7-8d76-437f52e03476.png)
+
 Tests
 -----
 
