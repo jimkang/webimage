@@ -69,7 +69,17 @@ Usage
           width: 320,
           height: 480,
           deviceScaleFactor: 1
-        }
+        },
+        supersampleOpts: {
+          finalBufferType: 'jpeg',
+          resizeMode: 'bezier'
+          // resizeMode can be:
+          // 'nearestNeighbor'
+          // 'bilinear'
+          // 'bicubic'
+          // 'hermite'
+          // 'bezier'
+        } 
       },
       useImage);
 

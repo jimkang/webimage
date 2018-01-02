@@ -1,14 +1,17 @@
-/* global __dirname */
+/* global __dirname, process */
 
 var test = require('tape');
 var Webimage = require('../index');
 var fs = require('fs');
 var assertNoError = require('assert-no-error');
 var rimraf = require('rimraf');
+require('longjohn');
 
 const outputDir = __dirname + '/output/';
 
 rimraf.sync(outputDir + '*.png');
+
+process.on('unhandledRejection', reportUnhandledRejection);
 
 var testCases = [
   {
@@ -32,7 +35,15 @@ var testCases = [
   },
   {
     name: 'No opts',
-    htmlFile: 'sample.html'
+    htmlFile: 'skew.html'
+  },
+  {
+    name: 'Supersample',
+    htmlFile: 'skew.html',
+    supersampleOpts: {
+      desiredBufferType: 'jpeg',
+      resizeMode: 'bezier'
+    }
   }
 ];
 
@@ -57,7 +68,8 @@ function useWebimage(error, webimage) {
         {
           html,
           screenshotOpts: testCase.screenshotOpts,
-          viewportOpts: testCase.viewportOpts
+          viewportOpts: testCase.viewportOpts,
+          supersampleOpts: testCase.supersampleOpts
         },
         checkResult
       );
@@ -81,4 +93,10 @@ function useWebimage(error, webimage) {
       t.end();
     }
   }
+}
+
+function reportUnhandledRejection(reason, promise) {
+  console.log(reason.message);
+  console.log(reason.stack);
+  console.log(promise);
 }
