@@ -22,7 +22,7 @@ function Webimage(constructorDone) {
       }
     }
 
-    function getImage({ html, screenshotOpts }, done) {
+    function getImage({ html, screenshotOpts, viewportOpts }, done) {
       if (!browser) {
         callNextTick(
           done,
@@ -33,7 +33,15 @@ function Webimage(constructorDone) {
       }
 
       function onPage(page) {
-        page.setContent(html).then(takeScreenshot, done);
+        page.setContent(html).then(setViewport, done);
+
+        function setViewport() {
+          if (viewportOpts) {
+            page.setViewport(viewportOpts).then(takeScreenshot, done);
+          } else {
+            callNextTick(takeScreenshot);
+          }
+        }
 
         function takeScreenshot() {
           page.screenshot(screenshotOpts).then(passBuffer, done);

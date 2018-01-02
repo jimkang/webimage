@@ -22,8 +22,17 @@ var testCases = [
         height: 500
       },
       omitBackground: true
+    },
+    viewportOpts: {
+      width: 320,
+      height: 480,
+      deviceScaleFactor: 1
     }
     // TODO: File diff.
+  },
+  {
+    name: 'No opts',
+    htmlFile: 'sample.html'
   }
 ];
 
@@ -45,7 +54,11 @@ function useWebimage(error, webimage) {
         encoding: 'utf8'
       });
       webimage.getImage(
-        { html, screenshotOpts: testCase.screenshotOpts },
+        {
+          html,
+          screenshotOpts: testCase.screenshotOpts,
+          viewportOpts: testCase.viewportOpts
+        },
         checkResult
       );
 

@@ -64,6 +64,11 @@ Usage
             height: 500
           },
           omitBackground: true
+        },
+        viewportOpts: {
+          width: 320,
+          height: 480,
+          deviceScaleFactor: 1
         }
       },
       useImage);
