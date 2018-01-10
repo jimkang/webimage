@@ -1,7 +1,7 @@
 webimage
 ==================
 
-Takes some html (with whatever you want embedded in it) and changes it into an image via headless Chrome. Callback-based convenience wrapper for [puppeteer](https://github.com/GoogleChrome/puppeteer).
+Takes some html (with whatever you want embedded in it) and changes it into an image via headless Chrome. Callback-based convenience wrapper for [puppeteer](https://github.com/GoogleChrome/puppeteer). Also accepts urls.
 
 Installation
 ------------
@@ -96,6 +96,8 @@ Usage
 Result:
 
 ![smidgeo sample](https://user-images.githubusercontent.com/324298/34311923-912e0406-e72e-11e7-8d76-437f52e03476.png)
+
+If you want to use a url instead of html, specify a `url` opt when calling webimage.
 
 Tests
 -----

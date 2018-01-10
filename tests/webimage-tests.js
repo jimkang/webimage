@@ -44,6 +44,20 @@ var testCases = [
       desiredBufferType: 'jpeg',
       resizeMode: 'bezier'
     }
+  },
+  {
+    name: 'URL shot',
+    url: 'https://apod.nasa.gov/apod/astropix.html',
+    screenshotOpts: {
+      clip: {
+        x: 0,
+        y: 0,
+        width: 1280,
+        height: 800
+      },
+      omitBackground: true
+    }
+    // TODO: File diff.
   }
 ];
 
@@ -61,12 +75,16 @@ function useWebimage(error, webimage) {
     test(testCase.name, webImageTest);
 
     function webImageTest(t) {
-      var html = fs.readFileSync(__dirname + '/fixtures/' + testCase.htmlFile, {
-        encoding: 'utf8'
-      });
+      var html;
+      if (testCase.htmlFile) {
+        html = fs.readFileSync(__dirname + '/fixtures/' + testCase.htmlFile, {
+          encoding: 'utf8'
+        });
+      }
       webimage.getImage(
         {
           html,
+          url: testCase.url,
           screenshotOpts: testCase.screenshotOpts,
           viewportOpts: testCase.viewportOpts,
           supersampleOpts: testCase.supersampleOpts

@@ -39,7 +39,7 @@ function Webimage(constructorDone) {
     }
 
     function getImage(
-      { html, screenshotOpts, viewportOpts, supersampleOpts },
+      { html, url, screenshotOpts, viewportOpts, supersampleOpts },
       done
     ) {
       if (!browser) {
@@ -52,7 +52,13 @@ function Webimage(constructorDone) {
       }
 
       function onPage(page) {
-        page.setContent(html).then(setViewport, handleRejection);
+        if (html) {
+          page.setContent(html).then(setViewport, handleRejection);
+        } else if (url) {
+          page.goto(url).then(setViewport, handleRejection);
+        } else {
+          callNextTick(done, new Error('No html or url given to getImage.'));
+        }
 
         function setViewport() {
           // We need to set the viewport's deviceScaleFactor if we are going to supersample.
