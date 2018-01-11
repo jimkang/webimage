@@ -54,10 +54,11 @@ function Webimage(constructorDone) {
       function onPage(page) {
         if (html) {
           setViewport().then(
-            page.setContent(html).then(takeScreenshot, handleRejection),
+            page.setContent(html).then(waitForLoadCompletion, handleRejection),
             handleRejection
           );
         } else if (url) {
+          // Unsure if waiting for the 'load' event is necessary here.
           setViewport().then(
             page.goto(url).then(takeScreenshot, handleRejection),
             handleRejection
@@ -89,9 +90,12 @@ function Webimage(constructorDone) {
           if (hasValidViewportOpts) {
             return page.setViewport(viewportOpts);
           } else {
-            // callNextTick(takeScreenshot);
             return Promise.resolve();
           }
+        }
+
+        function waitForLoadCompletion() {
+          page.once('load', takeScreenshot);
         }
 
         // function waitForRightSize() {
