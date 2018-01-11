@@ -18,7 +18,7 @@ var jimpModesForResizeModes = {
 };
 
 function Webimage(constructorDone) {
-  puppeteer.launch().then(onBrowser, constructorDone);
+  puppeteer.launch(/*{ headless: false }*/).then(onBrowser, constructorDone);
 
   function onBrowser(theBrowser) {
     var browser = theBrowser;
@@ -53,17 +53,28 @@ function Webimage(constructorDone) {
 
       function onPage(page) {
         if (html) {
-          page.setContent(html).then(setViewport, handleRejection);
+          setViewport().then(
+            page.setContent(html).then(takeScreenshot, handleRejection),
+            handleRejection
+          );
         } else if (url) {
-          page.goto(url).then(setViewport, handleRejection);
+          setViewport().then(
+            page.goto(url).then(takeScreenshot, handleRejection),
+            handleRejection
+          );
         } else {
           callNextTick(done, new Error('No html or url given to getImage.'));
         }
 
         function setViewport() {
+          var hasValidViewportOpts =
+            viewportOpts &&
+            !isNaN(viewportOpts.width) &&
+            !isNaN(viewportOpts.height);
+
           // We need to set the viewport's deviceScaleFactor if we are going to supersample.
           if (supersampleOpts) {
-            if (viewportOpts) {
+            if (hasValidViewportOpts) {
               if (viewportOpts.deviceScaleFactor) {
                 viewportOpts.deviceScaleFactor *= 2;
               } else {
@@ -75,14 +86,20 @@ function Webimage(constructorDone) {
             }
           }
 
-          if (viewportOpts) {
-            page
-              .setViewport(viewportOpts)
-              .then(takeScreenshot, handleRejection);
+          if (hasValidViewportOpts) {
+            return page.setViewport(viewportOpts);
           } else {
-            callNextTick(takeScreenshot);
+            // callNextTick(takeScreenshot);
+            return Promise.resolve();
           }
         }
+
+        // function waitForRightSize() {
+        //   return page.waitForFunction(
+        //     `window.innerWidth === ${viewportOpts.width} &&
+        //     window.innerHeight === ${viewportOpts.height}`
+        //   );
+        // }
 
         function takeScreenshot() {
           if (supersampleOpts) {

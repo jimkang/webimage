@@ -21,14 +21,33 @@ var testCases = [
       clip: {
         x: 0,
         y: 0,
-        width: 500,
-        height: 500
+        width: 320,
+        height: 480
       },
       omitBackground: true
     },
     viewportOpts: {
       width: 320,
       height: 480,
+      deviceScaleFactor: 1
+    }
+    // TODO: File diff.
+  },
+  {
+    name: 'Large viewport',
+    htmlFile: 'sample.html',
+    screenshotOpts: {
+      clip: {
+        x: 0,
+        y: 0,
+        width: 1280,
+        height: 720
+      },
+      omitBackground: true
+    },
+    viewportOpts: {
+      width: 1280,
+      height: 720,
       deviceScaleFactor: 1
     }
     // TODO: File diff.
@@ -97,7 +116,11 @@ function useWebimage(error, webimage) {
         t.ok(buffer.length > 0, 'buffer is not empty.');
         var filename = outputDir + testCase.name + '.png';
         fs.writeFileSync(filename, buffer);
-        console.log('Look at', filename, 'and make sure it is good.');
+        console.log(
+          'Look at',
+          filename,
+          'and make sure it is good and the contents are the SIZE they *should* be.'
+        );
         t.end();
       }
     }

@@ -12,10 +12,26 @@
       color: white;
     }
     .container {
+      width: 500px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
+
+
+    .perspective-wrapper {
+      perspective: 500px;
+      width: 320px;
+      position: absolute;
+      margin-top: 3em;
+    }
+
+    .rotate-wrapper {
+      transform: rotateY(-30deg);
+      width: 600px;
+      height: 800px;
+    }
+
   </style>
 </head>
 <body>
@@ -23,7 +39,9 @@
     <div class="header">
       Here is some sample text!
     </div>
-    <img src="http://smidgeo.com/images/smidgeo_headshot.jpg" />
+    <div class="perspective-wrapper">
+      <img class="rotate-wrapper" src="http://smidgeo.com/images/smidgeo_headshot.jpg" />
+    </div>
   </div>
 </body>
 </html>
