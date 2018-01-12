@@ -17,8 +17,19 @@ var jimpModesForResizeModes = {
   bezier: Jimp.RESIZE_BEZIER
 };
 
-function Webimage(constructorDone) {
-  puppeteer.launch(/*{ headless: false }*/).then(onBrowser, constructorDone);
+function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
+  var constructorDone = possibleConstructorDone;
+  var launchOpts;
+
+  if (typeof launchOptsOrConstructorDone === 'function') {
+    constructorDone = launchOptsOrConstructorDone;
+  } else if (
+    launchOptsOrConstructorDone &&
+    typeof launchOptsOrConstructorDone === 'object'
+  ) {
+    launchOpts = launchOptsOrConstructorDone;
+  }
+  puppeteer.launch(launchOpts).then(onBrowser, constructorDone);
 
   function onBrowser(theBrowser) {
     var browser = theBrowser;

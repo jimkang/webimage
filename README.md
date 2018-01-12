@@ -99,6 +99,8 @@ Result:
 
 If you want to use a url instead of html, specify a `url` opt when calling webimage.
 
+If you want to provide puppeteer.launch opts, pass it as the first parameter to the constructor and a callback to receive the instance as the second parameter.
+
 Tests
 -----
 
