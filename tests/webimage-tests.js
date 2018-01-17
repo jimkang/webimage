@@ -80,9 +80,9 @@ var testCases = [
   }
 ];
 
-// Webimage(useWebimage);
+Webimage(useWebimage);
 // Uncomment to run tests in headful mode.
-Webimage({ headless: false }, useWebimage);
+// Webimage({ headless: false }, useWebimage);
 
 function useWebimage(error, webimage) {
   if (error) {

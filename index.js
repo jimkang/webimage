@@ -44,12 +44,20 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
 
   function onBrowser(theBrowser) {
     browser = theBrowser;
-    browser.newPage().then(onPage, handleRejectionDuringConstruction);
+    browser.pages().then(onPages, handleRejectionDuringConstruction);
   }
 
-  function onPage(thePage) {
-    page = thePage;
-    constructorDone(null, { getImage, shutDown });
+  function onPages(pages) {
+    if (pages.length > 0) {
+      page = pages[0];
+      constructorDone(null, { getImage, shutDown });
+    } else {
+      constructorDone(
+        new Error(
+          'No pages found in browser. Maybe Chrome no longer creates a page by default?'
+        )
+      );
+    }
   }
 
   function shutDown(done) {
