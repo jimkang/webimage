@@ -22,6 +22,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
   var launchOpts;
   var browser;
   var page;
+  var shuttingDown = false;
 
   if (typeof launchOptsOrConstructorDone === 'function') {
     constructorDone = launchOptsOrConstructorDone;
@@ -31,9 +32,14 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
   ) {
     launchOpts = launchOptsOrConstructorDone;
   }
-  puppeteer
-    .launch(launchOpts)
-    .then(onBrowser, handleRejectionDuringConstruction);
+
+  startBrowser();
+
+  function startBrowser() {
+    puppeteer
+      .launch(launchOpts)
+      .then(onBrowser, handleRejectionDuringConstruction);
+  }
 
   // Doing this instead of passing `constructorDone` directly to the reject param of the above promises to avoid
   // making them into reject handlers directly. If we do that, then if there is a problem in `done`, clients are
@@ -42,14 +48,23 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     callNextTick(constructorDone, error);
   }
 
+  function onDisconnect() {
+    if (!shuttingDown) {
+      throw new Error('Got disconnected from the browser!');
+    }
+    // startBrowser();
+  }
+
   function onBrowser(theBrowser) {
     browser = theBrowser;
+    browser.on('disconnected', onDisconnect);
     browser.pages().then(onPages, handleRejectionDuringConstruction);
   }
 
   function onPages(pages) {
     if (pages.length > 0) {
       page = pages[0];
+      page.on('error', onPageCrash);
       constructorDone(null, { getImage, shutDown });
     } else {
       constructorDone(
@@ -60,7 +75,14 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     }
   }
 
+  function onPageCrash(error) {
+    // For now, just give up on everything.
+    console.log('Caught page crash!', error, error.stack);
+    throw error;
+  }
+
   function shutDown(done) {
+    shuttingDown = true;
     browser.close().then(handleCloseError, handleCloseError);
 
     function handleCloseError(error) {
@@ -78,6 +100,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     { html, url, screenshotOpts, viewportOpts, supersampleOpts },
     done
   ) {
+    console.log('Started getImage.');
     if (!browser) {
       callNextTick(
         done,
@@ -101,11 +124,21 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     }
 
     function waitForLoadCompletion() {
+      console.log('Waiting for page to load.');
       return new Promise(loadCompletionThenable);
 
       function loadCompletionThenable(resolve /*, reject*/) {
-        // TODO: timeout and reject, maybe.
+        console.log('resolve', resolve);
         page.once('load', resolve);
+
+        setTimeout(quitWaiting, 2000);
+
+        function quitWaiting() {
+          console.log('Giving up on waiting for page load!');
+          page.removeListener('load', resolve);
+          // TODO: reject instead of trying to take a shot anyway?
+          resolve();
+        }
       }
     }
 
@@ -117,6 +150,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     // }
 
     function takeScreenshot() {
+      console.log('Starting takeScreenshot.');
       if (supersampleOpts) {
         page.screenshot(screenshotOpts).then(sizeDown, handleRejection);
       } else {
@@ -128,6 +162,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       Jimp.read(buffer, resize);
 
       function resize(error, image) {
+        console.log('Resizing.');
         if (error) {
           done(error);
         } else {
@@ -145,6 +180,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     }
 
     function passBuffer(buffer) {
+      console.log('Got the screenshot!');
       done(null, buffer);
     }
 
