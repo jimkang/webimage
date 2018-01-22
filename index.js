@@ -134,7 +134,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         setTimeout(quitWaiting, waitLimit);
 
         function quitWaiting() {
-          console.log('webimage is giving up on waiting for page load!');
+          // console.log('webimage is giving up on waiting for page load!');
           page.removeListener('load', resolve);
           // TODO: reject instead of trying to take a shot anyway?
           resolve();
