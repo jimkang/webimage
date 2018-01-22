@@ -77,7 +77,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
 
   function onPageCrash(error) {
     // For now, just give up on everything.
-    console.log('Caught page crash!', error, error.stack);
+    console.log('webimage caught page crash!', error, error.stack);
     throw error;
   }
 
@@ -100,7 +100,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     { html, url, screenshotOpts, viewportOpts, supersampleOpts },
     done
   ) {
-    console.log('Started getImage.');
+    // console.log('Started getImage.');
     if (!browser) {
       callNextTick(
         done,
@@ -124,17 +124,17 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     }
 
     function waitForLoadCompletion() {
-      console.log('Waiting for page to load.');
+      // console.log('Waiting for page to load.');
       return new Promise(loadCompletionThenable);
 
       function loadCompletionThenable(resolve /*, reject*/) {
-        console.log('resolve', resolve);
+        // console.log('resolve', resolve);
         page.once('load', resolve);
 
         setTimeout(quitWaiting, 2000);
 
         function quitWaiting() {
-          console.log('Giving up on waiting for page load!');
+          console.log('webimage is giving up on waiting for page load!');
           page.removeListener('load', resolve);
           // TODO: reject instead of trying to take a shot anyway?
           resolve();
@@ -150,7 +150,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     // }
 
     function takeScreenshot() {
-      console.log('Starting takeScreenshot.');
+      // console.log('Starting takeScreenshot.');
       if (supersampleOpts) {
         page.screenshot(screenshotOpts).then(sizeDown, handleRejection);
       } else {
@@ -162,7 +162,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       Jimp.read(buffer, resize);
 
       function resize(error, image) {
-        console.log('Resizing.');
+        // console.log('Resizing.');
         if (error) {
           done(error);
         } else {
@@ -180,7 +180,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     }
 
     function passBuffer(buffer) {
-      console.log('Got the screenshot!');
+      // console.log('Got the screenshot!');
       done(null, buffer);
     }
 
