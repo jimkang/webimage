@@ -97,7 +97,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
   }
 
   function getImage(
-    { html, url, screenshotOpts, viewportOpts, supersampleOpts },
+    { html, url, screenshotOpts, viewportOpts, supersampleOpts, waitLimit = 2000 },
     done
   ) {
     // console.log('Started getImage.');
@@ -131,7 +131,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         // console.log('resolve', resolve);
         page.once('load', resolve);
 
-        setTimeout(quitWaiting, 2000);
+        setTimeout(quitWaiting, waitLimit);
 
         function quitWaiting() {
           console.log('webimage is giving up on waiting for page load!');
