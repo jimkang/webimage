@@ -118,7 +118,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
           .then(resizeIfNecessary, handleRejection)
           .then(saveBuffer, handleRejection)
           .then(removeCrashListener, handleRejection)
-          .then(closePageThenable)
+          .then(createClosePagePromise, handleRejection)
           .then(clearPageRef, handleRejection)
           .then(passBuffer, handleRejection);
       } else {
@@ -136,8 +136,8 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       page = null;
     }
 
-    function closePageThenable(resolve, reject) {
-      return page.close(resolve, reject);
+    function createClosePagePromise() {
+      return page.close();
     }
 
     // function handlePageCloseError(error) {
