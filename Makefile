@@ -1,4 +1,5 @@
 test:
+	node tests/crash-tests.js
 	node tests/webimage-tests.js
 
 pushall:

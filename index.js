@@ -62,12 +62,6 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     });
   }
 
-  function onPageCrash(error) {
-    // For now, just give up on everything.
-    console.log('webimage caught page crash!', error, error.stack);
-    throw error;
-  }
-
   function shutDown(done) {
     shuttingDown = true;
     browser.close().then(handleCloseError, handleCloseError);
@@ -90,10 +84,12 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       screenshotOpts,
       viewportOpts,
       supersampleOpts,
-      waitLimit = 2000
+      waitLimit = 2000,
+      forceCrash = false
     },
     done
   ) {
+    var needToCallDone = true;
     var page;
     var screenshotBuffer;
     // console.log('Started getImage.');
@@ -108,6 +104,11 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
 
     function onPage(thePage) {
       page = thePage;
+
+      if (forceCrash) {
+        onPageCrash(new Error('Test crash error.'));
+        return;
+      }
 
       if (html || url) {
         page.on('error', onPageCrash);
@@ -124,11 +125,20 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       } else {
         callNextTick(done, new Error('No html or url given to getImage.'));
       }
-    }
 
-    function removeCrashListener() {
-      // console.log('Removing crash listener.');
-      page.removeListener('error', onPageCrash);
+      function onPageCrash(error) {
+        console.log('webimage caught page crash!', error, error.stack);
+        // Promises really need to be cancellable.
+        if (needToCallDone) {
+          needToCallDone = false;
+          done(error);
+        }
+      }
+
+      function removeCrashListener() {
+        // console.log('Removing crash listener.');
+        page.removeListener('error', onPageCrash);
+      }
     }
 
     function clearPageRef() {
@@ -233,7 +243,10 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
 
     function passBuffer() {
       // console.log('Passing buffer', screenshotBuffer.length);
-      done(null, screenshotBuffer);
+      if (needToCallDone) {
+        needToCallDone = false;
+        done(null, screenshotBuffer);
+      }
     }
 
     // Doing this instead of passing `done` directly to the reject param of the above promises to avoid
