@@ -164,7 +164,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       if (html) {
         return page.setContent(html);
       } else {
-        return page.goto(url);
+        return page.goto(url, { waitUntil: 'networkidle0' });
       }
     }
 

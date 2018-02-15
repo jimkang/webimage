@@ -67,6 +67,7 @@ var testCases = [
   {
     name: 'URL shot',
     url: 'https://apod.nasa.gov/apod/astropix.html',
+    waitLimit: 10000,
     screenshotOpts: {
       clip: {
         x: 0,
