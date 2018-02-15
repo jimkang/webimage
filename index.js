@@ -1,6 +1,7 @@
 var puppeteer = require('puppeteer');
 var callNextTick = require('call-next-tick');
 var Jimp = require('jimp');
+var VError = require('verror');
 
 var mimeTypesForBufferTypes = {
   jpeg: Jimp.MIME_JPEG,
@@ -46,16 +47,8 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     callNextTick(constructorDone, error);
   }
 
-  function onDisconnect() {
-    if (!shuttingDown) {
-      throw new Error('Got disconnected from the browser!');
-    }
-    // startBrowser();
-  }
-
   function onBrowser(theBrowser) {
     browser = theBrowser;
-    browser.on('disconnected', onDisconnect);
     constructorDone(null, {
       getImage,
       shutDown
@@ -84,70 +77,83 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       screenshotOpts,
       viewportOpts,
       supersampleOpts,
-      waitLimit = 2000,
-      forceCrash = false
+      waitLimit = 2000
     },
-    done
+    getImageDone
   ) {
-    var needToCallDone = true;
+    var concluded = false;
+    browser.on('disconnected', onDisconnect);
+
     var page;
-    var screenshotBuffer;
+
     // console.log('Started getImage.');
     if (!browser) {
-      callNextTick(
-        done,
-        new Error('Browser is closed. Cannot get a web image.')
-      );
+      conclude(new Error('Browser is closed. Cannot get a web image.'));
     } else {
       browser.newPage().then(onPage, handleRejection);
     }
 
     function onPage(thePage) {
       page = thePage;
-
-      if (forceCrash) {
-        onPageCrash(new Error('Test crash error.'));
-        return;
-      }
+      page.on('error', onPageCrash);
 
       if (html || url) {
-        page.on('error', onPageCrash);
-        setViewport(viewportOpts, supersampleOpts)
-          .then(loadContent, handleRejection)
-          .then(waitForLoadCompletion, handleRejection)
-          .then(takeScreenshot, handleRejection)
-          .then(resizeIfNecessary, handleRejection)
-          .then(saveBuffer, handleRejection)
-          .then(removeCrashListener, handleRejection)
-          .then(createClosePagePromise, handleRejection)
-          .then(clearPageRef, handleRejection)
-          .then(passBuffer, handleRejection);
+        loadPage(evaluatePageLoad);
       } else {
-        callNextTick(done, new Error('No html or url given to getImage.'));
+        conclude(new Error('No html or url given to getImage.'));
       }
 
-      function onPageCrash(error) {
-        console.log('webimage caught page crash!', error, error.stack);
-        // Promises really need to be cancellable.
-        if (needToCallDone) {
-          needToCallDone = false;
-          done(error);
+      function evaluatePageLoad(error) {
+        if (error) {
+          cleanUpPage(conclude);
+        } else {
+          getImageFromLoadedPage(evaluateGetImage);
         }
       }
 
-      function removeCrashListener() {
-        // console.log('Removing crash listener.');
-        page.removeListener('error', onPageCrash);
+      function evaluateGetImage(error, buffer) {
+        if (error) {
+          cleanUpPage(conclude);
+        } else {
+          cleanUpPage(passBuffer);
+        }
+
+        function passBuffer() {
+          conclude(null, buffer);
+        }
+      }
+
+      function loadPage(loadDone) {
+        var needToCallDone = true;
+
+        setViewport(viewportOpts, supersampleOpts)
+          .then(loadContent, handleRejection)
+          .then(callWaitForLoadCompletion, handleRejection);
+
+        function callWaitForLoadCompletion() {
+          waitForLoadCompletion(loadSuccess);
+        }
+
+        function loadSuccess() {
+          if (needToCallDone) {
+            needToCallDone = false;
+            loadDone();
+          }
+        }
+      }
+
+      function getImageFromLoadedPage(imageGetDone) {
+        page.screenshot(screenshotOpts).then(callResize, imageGetDone);
+
+        function callResize(buffer) {
+          resizeIfNecessary(buffer, imageGetDone);
+        }
       }
     }
 
     function clearPageRef() {
       // console.log('Clearing page ref.');
       page = null;
-    }
-
-    function createClosePagePromise() {
-      return page.close();
     }
 
     // function handlePageCloseError(error) {
@@ -162,27 +168,19 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       }
     }
 
-    function waitForLoadCompletion() {
-      // console.log('Waiting for page to load.');
-      return new Promise(loadCompletionThenable);
+    function waitForLoadCompletion(waitDone) {
+      page.once('load', notifyLoaded);
+      var timeoutId = setTimeout(quitWaiting, waitLimit);
 
-      function loadCompletionThenable(resolve /*, reject*/) {
-        // console.log('resolve', resolve);
-        page.once('load', notifyLoaded);
+      function notifyLoaded() {
+        clearTimeout(timeoutId);
+        waitDone();
+      }
 
-        var timeoutId = setTimeout(quitWaiting, waitLimit);
-
-        function notifyLoaded() {
-          clearTimeout(timeoutId);
-          resolve();
-        }
-
-        function quitWaiting() {
-          console.log('webimage is giving up on waiting for page load!');
-          page.removeListener('load', resolve);
-          // TODO: reject instead of trying to take a shot anyway?
-          resolve();
-        }
+      function quitWaiting() {
+        console.log('webimage is giving up on waiting for page load!');
+        page.removeListener('load', notifyLoaded);
+        waitDone();
       }
     }
 
@@ -193,25 +191,21 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     //   );
     // }
 
-    function takeScreenshot() {
-      return page.screenshot(screenshotOpts);
-    }
-
-    function resizeIfNecessary(buffer) {
+    function resizeIfNecessary(buffer, resizeDone) {
       if (supersampleOpts) {
-        return new Promise(sizeDown);
+        sizeDown();
       } else {
-        return Promise.resolve(buffer);
+        callNextTick(resizeDone, null, buffer);
       }
 
-      function sizeDown(resolve, reject) {
+      function sizeDown() {
         // debugger;
         Jimp.read(buffer, resize);
 
         function resize(error, image) {
           // console.log('Resizing.');
           if (error) {
-            reject(error);
+            resizeDone(error);
           } else {
             image.resize(
               ~~(image.bitmap.width / 2),
@@ -220,32 +214,10 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
             );
             image.getBuffer(
               mimeTypesForBufferTypes[supersampleOpts.desiredBufferType],
-              getBufferDone
+              resizeDone
             );
           }
-
-          function getBufferDone(error, resizedBuffer) {
-            // debugger;
-            if (error) {
-              reject(error);
-            } else {
-              resolve(resizedBuffer);
-            }
-          }
         }
-      }
-    }
-
-    function saveBuffer(buffer) {
-      // console.log('Got the screenshot!', buffer.length);
-      screenshotBuffer = buffer;
-    }
-
-    function passBuffer() {
-      // console.log('Passing buffer', screenshotBuffer.length);
-      if (needToCallDone) {
-        needToCallDone = false;
-        done(null, screenshotBuffer);
       }
     }
 
@@ -254,7 +226,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     // going to get a headscratcher UnhandledPromiseRejectionWarning.
     function handleRejection(error) {
       // console.log('Rejection!')
-      callNextTick(done, error);
+      conclude(error);
     }
 
     function setViewport(viewportOpts, supersampleOpts) {
@@ -281,6 +253,46 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         return page.setViewport(viewportOpts);
       } else {
         return Promise.resolve();
+      }
+    }
+
+    function onDisconnect() {
+      if (!shuttingDown) {
+        conclude(new Error('Got disconnected from the browser!'));
+      }
+      // startBrowser();
+    }
+
+    function conclude(error, buffer) {
+      if (!concluded) {
+        concluded = true;
+        browser.removeListener('disconnected', onDisconnect);
+        callNextTick(getImageDone, error, buffer);
+      }
+    }
+
+    function cleanUpPage(cleanUpDone) {
+      if (page) {
+        console.log('Removing handler');
+        page.removeListener('error', onPageCrash);
+
+        page
+          .close()
+          .then(clearPageRef, handleRejection)
+          .then(cleanUpDone, handleRejection);
+      }
+    }
+
+    function onPageCrash(error) {
+      // console.log('webimage caught page crash!', error, error.stack);
+      cleanUpPage(callConclude);
+
+      function callConclude(cleanUpError) {
+        if (cleanUpError) {
+          conclude(new VError.MultiError(error, cleanUpError));
+        } else {
+          conclude(error);
+        }
       }
     }
   }

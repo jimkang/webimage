@@ -1,6 +1,8 @@
-/* global process */
+/* global process, __dirname */
+
 var test = require('tape');
 var Webimage = require('../index');
+var fs = require('fs');
 var assertNoError = require('assert-no-error');
 require('longjohn');
 
@@ -21,17 +23,19 @@ function useWebimage(error, webimage) {
   function crashTest(t) {
     webimage.getImage(
       {
-        url: 'http://smidgeo.com/plan/',
+        html: fs.readFileSync(__dirname + '/fixtures/crash-page.html', {
+          encoding: 'utf8'
+        }),
+        // waitLimit: 20000,
         screenshotOpts: {
           clip: {
             x: 0,
             y: 0,
             width: 1280,
-            height: 800
+            height: 10000
           },
           omitBackground: true
-        },
-        forceCrash: true
+        }
       },
       checkResult
     );
@@ -40,6 +44,9 @@ function useWebimage(error, webimage) {
       t.ok(error, 'Received error.');
       console.log(error);
       t.ok(!buffer, 'Did NOT receive a buffer.');
+      if (buffer) {
+        fs.writeFileSync(__dirname + '/output/crash-result.png');
+      }
       t.end();
     }
   }
