@@ -95,7 +95,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
 
     function onPage(thePage) {
       page = thePage;
-      page.on('error', onPageCrash);
+      page.on('error', conclude);
 
       if (html || url) {
         loadPage(evaluatePageLoad);
@@ -105,21 +105,9 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
 
       function evaluatePageLoad(error) {
         if (error) {
-          cleanUpPage(conclude);
+          conclude(error);
         } else {
-          getImageFromLoadedPage(evaluateGetImage);
-        }
-      }
-
-      function evaluateGetImage(error, buffer) {
-        if (error) {
-          cleanUpPage(conclude);
-        } else {
-          cleanUpPage(passBuffer);
-        }
-
-        function passBuffer() {
-          conclude(null, buffer);
+          getImageFromLoadedPage(conclude);
         }
       }
 
@@ -267,32 +255,30 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       if (!concluded) {
         concluded = true;
         browser.removeListener('disconnected', onDisconnect);
-        callNextTick(getImageDone, error, buffer);
+
+        cleanUpPage(callDone);
+      }
+
+      function callDone(cleanUpError) {
+        var finalError = error;
+        if (cleanUpError) {
+          finalError = new VError.MultiError(error, cleanUpError);
+        }
+        getImageDone(finalError, buffer);
       }
     }
 
     function cleanUpPage(cleanUpDone) {
       if (page) {
         console.log('Removing handler');
-        page.removeListener('error', onPageCrash);
+        page.removeListener('error', conclude);
 
         page
           .close()
-          .then(clearPageRef, handleRejection)
-          .then(cleanUpDone, handleRejection);
-      }
-    }
-
-    function onPageCrash(error) {
-      // console.log('webimage caught page crash!', error, error.stack);
-      cleanUpPage(callConclude);
-
-      function callConclude(cleanUpError) {
-        if (cleanUpError) {
-          conclude(new VError.MultiError(error, cleanUpError));
-        } else {
-          conclude(error);
-        }
+          .then(clearPageRef, cleanUpDone)
+          // close() passes nothing on success, so it's safe to pass cleanUpDone
+          // as the success handler.
+          .then(cleanUpDone, cleanUpDone);
       }
     }
   }
