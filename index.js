@@ -270,7 +270,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
 
     function cleanUpPage(cleanUpDone) {
       if (page) {
-        console.log('Removing handler');
+        //console.log('Removing handler');
         page.removeListener('error', conclude);
 
         page
