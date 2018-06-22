@@ -1,6 +1,6 @@
 {
   "name": "webimage",
-  "version": "1.2.12",
+  "version": "1.2.13",
   "description": "Takes some html (with whatever you want embedded in it) and changes it into an image via headless Chrome.",
   "main": "index.js",
   "scripts": {
