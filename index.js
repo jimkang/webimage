@@ -206,10 +206,12 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
             if (autocrop) {
               image.autocrop(autocrop);
             }
-            image.getBuffer(
-              mimeTypesForBufferTypes[supersampleOpts.desiredBufferType],
-              resizeDone
-            );
+            let mimeType = Jimp.MIME_PNG;
+            if (supersampleOpts && supersampleOpts.desiredBufferType) {
+              mimeType =
+                mimeTypesForBufferTypes[supersampleOpts.desiredBufferType];
+            }
+            image.getBuffer(mimeType, resizeDone);
           }
         }
       }

@@ -82,10 +82,6 @@ var testCases = [
   {
     name: 'Crop',
     htmlFile: 'skew.html',
-    supersampleOpts: {
-      desiredBufferType: 'jpeg',
-      resizeMode: 'bezier'
-    },
     autocrop: {
       cropOnlyFrames: false
     }
