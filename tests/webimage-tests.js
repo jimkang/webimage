@@ -78,6 +78,17 @@ var testCases = [
       omitBackground: true
     }
     // TODO: File diff.
+  },
+  {
+    name: 'Crop',
+    htmlFile: 'skew.html',
+    supersampleOpts: {
+      desiredBufferType: 'jpeg',
+      resizeMode: 'bezier'
+    },
+    autocrop: {
+      cropOnlyFrames: false
+    }
   }
 ];
 
@@ -109,7 +120,8 @@ function useWebimage(error, webimage) {
           url: testCase.url,
           screenshotOpts: testCase.screenshotOpts,
           viewportOpts: testCase.viewportOpts,
-          supersampleOpts: testCase.supersampleOpts
+          supersampleOpts: testCase.supersampleOpts,
+          autocrop: testCase.autocrop
         },
         checkResult
       );
@@ -117,7 +129,14 @@ function useWebimage(error, webimage) {
       function checkResult(error, buffer) {
         assertNoError(t.ok, error, 'No error while getting image.');
         t.ok(buffer.length > 0, 'buffer is not empty.');
-        var filename = outputDir + testCase.name + '.png';
+        var ext = '.png';
+        if (
+          testCase.supersampleOpts &&
+          testCase.supersampleOpts.desiredBufferType === 'jpeg'
+        ) {
+          ext = '.jpg';
+        }
+        var filename = outputDir + testCase.name + ext;
         fs.writeFileSync(filename, buffer);
         console.log(
           'Look at',

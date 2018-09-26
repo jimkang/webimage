@@ -77,7 +77,8 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       screenshotOpts,
       viewportOpts,
       supersampleOpts,
-      waitLimit = 2000
+      waitLimit = 2000,
+      autocrop
     },
     getImageDone
   ) {
@@ -134,7 +135,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         page.screenshot(screenshotOpts).then(callResize, imageGetDone);
 
         function callResize(buffer) {
-          resizeIfNecessary(buffer, imageGetDone);
+          runJimpOps(buffer, imageGetDone);
         }
       }
     }
@@ -179,14 +180,14 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     //   );
     // }
 
-    function resizeIfNecessary(buffer, resizeDone) {
-      if (supersampleOpts) {
-        sizeDown();
+    function runJimpOps(buffer, resizeDone) {
+      if (supersampleOpts || autocrop) {
+        operate();
       } else {
         callNextTick(resizeDone, null, buffer);
       }
 
-      function sizeDown() {
+      function operate() {
         // debugger;
         Jimp.read(buffer, resize);
 
@@ -195,11 +196,16 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
           if (error) {
             resizeDone(error);
           } else {
-            image.resize(
-              ~~(image.bitmap.width / 2),
-              ~~(image.bitmap.height / 2),
-              jimpModesForResizeModes[supersampleOpts.resizeMode]
-            );
+            if (supersampleOpts) {
+              image.resize(
+                ~~(image.bitmap.width / 2),
+                ~~(image.bitmap.height / 2),
+                jimpModesForResizeModes[supersampleOpts.resizeMode]
+              );
+            }
+            if (autocrop) {
+              image.autocrop(autocrop);
+            }
             image.getBuffer(
               mimeTypesForBufferTypes[supersampleOpts.desiredBufferType],
               resizeDone

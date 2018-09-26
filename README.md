@@ -79,6 +79,11 @@ Usage
           // 'bicubic'
           // 'hermite'
           // 'bezier'
+        },
+        autocrop: {
+          // Provide an object here to autocrop (crop out sections adjacent to the edges that are the same color as the edges).
+          // These options correspond to Jimp autocrop: https://github.com/oliver-moran/jimp/tree/master/packages/plugin-crop#autocrop
+
         } 
       },
       useImage);
