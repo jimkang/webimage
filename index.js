@@ -1,7 +1,11 @@
+/* global process */
+
 var puppeteer = require('puppeteer');
 var callNextTick = require('call-next-tick');
 var Jimp = require('jimp');
 var VError = require('verror');
+
+const nsInMS = 1e9 / 1000;
 
 var mimeTypesForBufferTypes = {
   jpeg: Jimp.MIME_JPEG,
@@ -78,7 +82,10 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       viewportOpts,
       supersampleOpts,
       waitLimit = 2000,
-      autocrop
+      autocrop,
+      burstCount = 1,
+      timeBetweenBursts = 1000 / 30,
+      debug = false
     },
     getImageDone
   ) {
@@ -108,7 +115,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         if (error) {
           conclude(error);
         } else {
-          getImageFromLoadedPage(conclude);
+          getImagesFromLoadedPage(conclude);
         }
       }
 
@@ -131,8 +138,58 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         }
       }
 
+      function getImagesFromLoadedPage(imagesGotDone) {
+        var buffers = [];
+        var timeOfLastScreenshot;
+
+        callGetImage();
+
+        function proceedWithImage(error, buffer) {
+          if (error) {
+            imagesGotDone(error);
+            return;
+          }
+
+          buffers.push(buffer);
+
+          //console.log('buffers', buffers.length, 'burstCount', burstCount);
+          if (buffers.length < burstCount) {
+            let delayUntilNextImage = timeBetweenBursts;
+            const now = process.hrtime();
+            if (timeOfLastScreenshot) {
+              // Not accounted for: The time it actually takes
+              // to take the screenshot once the API call is
+              // made.
+              delayUntilNextImage -= convertDiffToMS(
+                process.hrtime(timeOfLastScreenshot)
+              );
+            }
+            timeOfLastScreenshot = now;
+            setTimeout(callGetImage, delayUntilNextImage);
+          } else {
+            if (buffers.length === 1) {
+              imagesGotDone(null, buffers[0]);
+            } else {
+              imagesGotDone(null, buffers);
+            }
+          }
+        }
+
+        function callGetImage() {
+          getImageFromLoadedPage(proceedWithImage);
+        }
+      }
+
+      // Possible optimization: Do resizes in parallel with screenshotting.
       function getImageFromLoadedPage(imageGetDone) {
-        page.screenshot(screenshotOpts).then(callResize, imageGetDone);
+        if (page) {
+          page.screenshot(screenshotOpts).then(callResize, imageGetDone);
+        } else {
+          callNextTick(
+            imageGetDone,
+            new Error('page cleared before screenshot could be taken.')
+          );
+        }
 
         function callResize(buffer) {
           runJimpOps(buffer, imageGetDone);
@@ -167,8 +224,12 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       }
 
       function quitWaiting() {
-        console.log('webimage is giving up on waiting for page load!');
-        page.removeListener('load', notifyLoaded);
+        if (debug) {
+          console.error('webimage is giving up on waiting for page load!');
+        }
+        if (page) {
+          page.removeListener('load', notifyLoaded);
+        }
         waitDone();
       }
     }
@@ -290,6 +351,10 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       }
     }
   }
+}
+
+function convertDiffToMS(hrDiff) {
+  return hrDiff[0] * 1000 + hrDiff[1] / nsInMS;
 }
 
 module.exports = Webimage;

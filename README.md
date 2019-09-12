@@ -106,6 +106,13 @@ If you want to use a url instead of html, specify a `url` opt when calling webim
 
 If you want to provide puppeteer.launch opts, pass it as the first parameter to the constructor and a callback to receive the instance as the second parameter.
 
+If you'd like to take a burst of screenshots, pass these params to `getImage`:
+
+- `burstCount`: the number of screenshots you want to take.
+- `timeBetweenBursts` is the number of milliseconds that should pass between screenshots. For example, `1000/30` for 30 fps. (The timing is not perfect, though. This module does not actually know how long the Puppeteer API will actually take to take the screenshot; assumes 0.)
+
+When you specify the burst params, the value passed to the callback is an array of buffers instead of a single buffer.
+
 Tests
 -----
 
