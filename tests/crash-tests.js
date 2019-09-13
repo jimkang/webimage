@@ -8,9 +8,9 @@ require('longjohn');
 
 process.on('unhandledRejection', reportUnhandledRejection);
 
-Webimage(useWebimage);
+//Webimage(useWebimage);
 // Uncomment to run tests in headful mode.
-// Webimage({ headless: false }, useWebimage);
+Webimage({ headless: false }, useWebimage);
 
 function useWebimage(error, webimage) {
   if (error) {
@@ -23,9 +23,7 @@ function useWebimage(error, webimage) {
   function crashTest(t) {
     webimage.getImage(
       {
-        html: fs.readFileSync(__dirname + '/fixtures/crash-page.html', {
-          encoding: 'utf8'
-        }),
+        url: 'chrome://crash',
         // waitLimit: 20000,
         screenshotOpts: {
           clip: {
