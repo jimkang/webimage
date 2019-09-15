@@ -5,6 +5,7 @@ var callNextTick = require('call-next-tick');
 var Jimp = require('jimp');
 var VError = require('verror');
 var queue = require('d3-queue').queue;
+var rawImagesToAnimatedGif = require('./raw-images-to-animated-gif');
 
 const nsInMS = 1e9 / 1000;
 
@@ -86,7 +87,8 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       autocrop,
       burstCount = 1,
       timeBetweenBursts = 1000 / 30,
-      debug = false
+      debug = false,
+      makeBurstsIntoAnimatedGif = false
     },
     getImageDone
   ) {
@@ -172,12 +174,19 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
               // Pass back a single buffer.
               encodeImage(images[0], imagesGotDone);
             } else {
-              // Pass back an array of buffers.
-              let q = queue();
-              for (let i = 0; i < images.length; ++i) {
-                q.defer(encodeImage, images[i]);
+              if (makeBurstsIntoAnimatedGif) {
+                rawImagesToAnimatedGif(
+                  { images, frameLengthMS: timeBetweenBursts },
+                  imagesGotDone
+                );
+              } else {
+                // Pass back an array of buffers.
+                let q = queue();
+                for (let i = 0; i < images.length; ++i) {
+                  q.defer(encodeImage, images[i]);
+                }
+                q.awaitAll(imagesGotDone);
               }
-              q.awaitAll(imagesGotDone);
             }
           }
         }

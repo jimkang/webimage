@@ -36,7 +36,7 @@ function rawToAnimatedGifTest(t) {
 
   function runConversion(error, images) {
     assertNoError(t.ok, error, 'No error while loading frame images.');
-    rawImagesToAnimatedGif(images, checkResult);
+    rawImagesToAnimatedGif({ images }, checkResult);
   }
 
   function checkResult(error, buffer) {

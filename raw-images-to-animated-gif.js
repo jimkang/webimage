@@ -4,8 +4,12 @@ var callNextTick = require('call-next-tick');
 var omggif = require('omggif');
 var indexImage = require('./index-image');
 
+// TODO: Figure out how large that stuff actually is.
+const gifHeaderFooterSize = 1000;
+const requiredPaletteSize = 256;
+
 // Assumes images are all the same size. images should be Jimp image instances.
-function rawImagesToAnimatedGif(images, done) {
+function rawImagesToAnimatedGif({ images, frameLengthMS = 1000 / 30 }, done) {
   if (images.length < 1) {
     callNextTick(
       done,
@@ -14,7 +18,12 @@ function rawImagesToAnimatedGif(images, done) {
     return;
   }
   var firstImage = images[0];
-  const totalImagesSize = images.length * firstImage.bitmap.data.length;
+  // Dividing by 4 here because there will be one index replacing the rgba values.
+  const totalImagesSize =
+    images.length *
+    (firstImage.bitmap.data.length / 4 +
+      gifHeaderFooterSize +
+      requiredPaletteSize);
   var gifImage = new Buffer(totalImagesSize);
   var gifWriter = new omggif.GifWriter(
     gifImage,
@@ -24,12 +33,25 @@ function rawImagesToAnimatedGif(images, done) {
   );
   images.forEach(addToGif);
   const gifBufferSize = gifWriter.end();
-  console.log('gifBufferSize', gifBufferSize);
   callNextTick(done, null, gifImage.slice(0, gifBufferSize));
 
   function addToGif(image) {
     let { indexes, palette } = indexImage({ pixels: image.bitmap.data });
-    gifWriter.addFrame(0, 0, image.width, image.height, indexes, { palette });
+    if (palette.length > requiredPaletteSize) {
+      console.error(
+        'Warning: Need to truncate palette from',
+        palette.length,
+        'colors down to',
+        requiredPaletteSize,
+        '.'
+      );
+      palette.splice(requiredPaletteSize);
+    }
+    // Delay unit is hundredths of second.
+    gifWriter.addFrame(0, 0, image.width, image.height, indexes, {
+      palette,
+      delay: frameLengthMS / 10
+    });
   }
 }
 
