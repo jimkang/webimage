@@ -1,7 +1,13 @@
+/* global process */
+
 var puppeteer = require('puppeteer');
 var callNextTick = require('call-next-tick');
 var Jimp = require('jimp');
 var VError = require('verror');
+var queue = require('d3-queue').queue;
+var rawImagesToAnimatedGif = require('./raw-images-to-animated-gif');
+
+const nsInMS = 1e9 / 1000;
 
 var mimeTypesForBufferTypes = {
   jpeg: Jimp.MIME_JPEG,
@@ -78,7 +84,11 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       viewportOpts,
       supersampleOpts,
       waitLimit = 2000,
-      autocrop
+      autocrop,
+      burstCount = 1,
+      timeBetweenBursts = 1000 / 30,
+      debug = false,
+      makeBurstsIntoAnimatedGif = false
     },
     getImageDone
   ) {
@@ -108,7 +118,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         if (error) {
           conclude(error);
         } else {
-          getImageFromLoadedPage(conclude);
+          getImagesFromLoadedPage(conclude);
         }
       }
 
@@ -131,10 +141,73 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         }
       }
 
-      function getImageFromLoadedPage(imageGetDone) {
-        page.screenshot(screenshotOpts).then(callResize, imageGetDone);
+      function getImagesFromLoadedPage(imagesGotDone) {
+        var images = [];
+        var timeOfLastScreenshot;
 
-        function callResize(buffer) {
+        callGetImage();
+
+        function proceedWithImage(error, image) {
+          if (error) {
+            imagesGotDone(error);
+            return;
+          }
+
+          images.push(image);
+
+          //console.log('buffers', buffers.length, 'burstCount', burstCount);
+          if (images.length < burstCount) {
+            let delayUntilNextImage = timeBetweenBursts;
+            const now = process.hrtime();
+            if (timeOfLastScreenshot) {
+              // Not accounted for: The time it actually takes
+              // to take the screenshot once the API call is
+              // made.
+              delayUntilNextImage -= convertDiffToMS(
+                process.hrtime(timeOfLastScreenshot)
+              );
+            }
+            timeOfLastScreenshot = now;
+            setTimeout(callGetImage, delayUntilNextImage);
+          } else {
+            if (images.length === 1) {
+              // Pass back a single buffer.
+              encodeImage(images[0], imagesGotDone);
+            } else {
+              if (makeBurstsIntoAnimatedGif) {
+                rawImagesToAnimatedGif(
+                  { images, frameLengthMS: timeBetweenBursts },
+                  imagesGotDone
+                );
+              } else {
+                // Pass back an array of buffers.
+                let q = queue();
+                for (let i = 0; i < images.length; ++i) {
+                  q.defer(encodeImage, images[i]);
+                }
+                q.awaitAll(imagesGotDone);
+              }
+            }
+          }
+        }
+
+        function callGetImage() {
+          getImageFromLoadedPage(proceedWithImage);
+        }
+      }
+
+      // Possible optimization: Do resizes in parallel with screenshotting.
+      function getImageFromLoadedPage(imageGetDone) {
+        if (page) {
+          page.screenshot(screenshotOpts).then(callOps, imageGetDone);
+        } else {
+          callNextTick(
+            imageGetDone,
+            new Error('page cleared before screenshot could be taken.')
+          );
+        }
+
+        function callOps(buffer) {
           runJimpOps(buffer, imageGetDone);
         }
       }
@@ -167,8 +240,12 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       }
 
       function quitWaiting() {
-        console.log('webimage is giving up on waiting for page load!');
-        page.removeListener('load', notifyLoaded);
+        if (debug) {
+          console.error('webimage is giving up on waiting for page load!');
+        }
+        if (page) {
+          page.removeListener('load', notifyLoaded);
+        }
         waitDone();
       }
     }
@@ -180,39 +257,24 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     //   );
     // }
 
-    function runJimpOps(buffer, resizeDone) {
-      if (supersampleOpts || autocrop) {
-        operate();
-      } else {
-        callNextTick(resizeDone, null, buffer);
-      }
+    function runJimpOps(buffer, opsDone) {
+      Jimp.read(buffer, operate);
 
-      function operate() {
-        // debugger;
-        Jimp.read(buffer, resize);
-
-        function resize(error, image) {
-          // console.log('Resizing.');
-          if (error) {
-            resizeDone(error);
-          } else {
-            if (supersampleOpts) {
-              image.resize(
-                ~~(image.bitmap.width / 2),
-                ~~(image.bitmap.height / 2),
-                jimpModesForResizeModes[supersampleOpts.resizeMode]
-              );
-            }
-            if (autocrop) {
-              image.autocrop(autocrop);
-            }
-            let mimeType = Jimp.MIME_PNG;
-            if (supersampleOpts && supersampleOpts.desiredBufferType) {
-              mimeType =
-                mimeTypesForBufferTypes[supersampleOpts.desiredBufferType];
-            }
-            image.getBuffer(mimeType, resizeDone);
+      function operate(error, image) {
+        if (error) {
+          opsDone(error);
+        } else {
+          if (supersampleOpts) {
+            image.resize(
+              ~~(image.bitmap.width / 2),
+              ~~(image.bitmap.height / 2),
+              jimpModesForResizeModes[supersampleOpts.resizeMode]
+            );
           }
+          if (autocrop) {
+            image.autocrop(autocrop);
+          }
+          opsDone(null, image);
         }
       }
     }
@@ -289,7 +351,19 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
           .then(cleanUpDone, cleanUpDone);
       }
     }
+
+    function encodeImage(image, done) {
+      let mimeType = Jimp.MIME_PNG;
+      if (supersampleOpts && supersampleOpts.desiredBufferType) {
+        mimeType = mimeTypesForBufferTypes[supersampleOpts.desiredBufferType];
+      }
+      image.getBuffer(mimeType, done);
+    }
   }
+}
+
+function convertDiffToMS(hrDiff) {
+  return hrDiff[0] * 1000 + hrDiff[1] / nsInMS;
 }
 
 module.exports = Webimage;

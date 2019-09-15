@@ -26,9 +26,13 @@
   "dependencies": {
     "async-waterfall": "^0.1.5",
     "call-next-tick": "^2.0.1",
+    "d3-array": "^2.3.1",
+    "d3-queue": "^3.0.7",
+    "get-rgba-palette": "^2.0.1",
     "jimp": "^0.5.3",
     "lodash.curry": "^4.1.1",
-    "puppeteer": "^1.4.0",
+    "omggif": "^1.0.10",
+    "puppeteer": "^1.19.0",
     "standard-bail": "^2.0.1",
     "verror": "^1.10.0"
   }
