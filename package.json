@@ -28,7 +28,6 @@
     "call-next-tick": "^2.0.1",
     "d3-array": "^2.3.1",
     "d3-queue": "^3.0.7",
-    "get-rgba-palette": "^2.0.1",
     "jimp": "^0.5.3",
     "lodash.curry": "^4.1.1",
     "omggif": "^1.0.10",
