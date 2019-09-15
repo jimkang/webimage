@@ -19,6 +19,7 @@
   "homepage": "https://github.com/jimkang/webimage",
   "devDependencies": {
     "assert-no-error": "^1.0.0",
+    "d3-queue": "^3.0.7",
     "longjohn": "^0.2.12",
     "rimraf": "^2.6.2",
     "tape": "^4.8.0"
@@ -26,8 +27,11 @@
   "dependencies": {
     "async-waterfall": "^0.1.5",
     "call-next-tick": "^2.0.1",
+    "d3-array": "^2.3.1",
+    "get-rgba-palette": "^2.0.1",
     "jimp": "^0.5.3",
     "lodash.curry": "^4.1.1",
+    "omggif": "^1.0.10",
     "puppeteer": "^1.19.0",
     "standard-bail": "^2.0.1",
     "verror": "^1.10.0"
