@@ -113,6 +113,10 @@ If you'd like to take a burst of screenshots, pass these params to `getImage`:
 
 When you specify the burst params, the value passed to the callback is an array of buffers instead of a single buffer.
 
+If you'd like to produce a single animated gif from the bursts instead of several pngs, also specify the param:
+
+- `makeBurstsIntoAnimatedGif: true`. This is currently slightly wonky, though; it produces gifs that are viewable in Firefox and Chrome, but Gimp says they're invalid.
+
 Tests
 -----
 
