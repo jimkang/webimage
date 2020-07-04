@@ -1,6 +1,6 @@
 /* global process */
 
-var { chromium } = require('playwright');
+var playwright = require('playwright');
 var callNextTick = require('call-next-tick');
 var Jimp = require('jimp');
 var VError = require('verror');
@@ -23,6 +23,8 @@ var jimpModesForResizeModes = {
   bezier: Jimp.RESIZE_BEZIER
 };
 
+const browserType = 'webkit';
+
 function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
   var constructorDone = possibleConstructorDone;
   var launchOpts;
@@ -41,7 +43,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
   startBrowser();
 
   function startBrowser() {
-    chromium
+    playwright[browserType]
       .launch(launchOpts)
       .then(onBrowser, handleRejectionDuringConstruction);
   }

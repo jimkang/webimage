@@ -1,7 +1,7 @@
 webimage
 ==================
 
-Takes some html (with whatever you want embedded in it) and changes it into an image via headless Chrome. Callback-based convenience wrapper for [puppeteer](https://github.com/GoogleChrome/puppeteer). Also accepts urls.
+Takes some html (with whatever you want embedded in it) and changes it into an image via headless webkit. Callback-based convenience wrapper for [playwright](https://github.com/microsoft/playwright). Also accepts urls.
 
 Installation
 ------------
@@ -115,6 +115,21 @@ When you specify the burst params, the value passed to the callback is an array 
 If you'd like to produce a single animated gif from the bursts instead of several pngs, also specify the param:
 
 - `makeBurstsIntoAnimatedGif: true`. This is currently slightly wonky, though; it produces gifs that are viewable in Firefox and Chrome, but Gimp says they're invalid.
+
+## A note on Chromium vs. Webkit
+
+This is far from scientific, but anecdotally, they seem about the same in terms of speed. Here's some measured test run times from a couple runs of `webimage-tests.js` on an Ubuntu laptop.
+
+| Test name      | Chromium            | Webkit              |
+|----------------|---------------------|---------------------|
+| Smidgeo sample | 2.393453813 seconds | 2.506748401 seconds |
+| Large viewport | 2.490697264 seconds | 2.576515146 seconds |
+| No opts        | 2.624029675 seconds | 2.665525446 seconds |
+| Supersample    | 3.946490793 seconds | 3.807545900 seconds |
+| URL shot       | 4.173368954 seconds | 3.815081776 seconds |
+| Crop           | 2.679637398 seconds | 2.680670817 seconds |
+
+I don't think taking screenshots works at all in headless Firefox as of 2020-07-03.
 
 Tests
 -----
