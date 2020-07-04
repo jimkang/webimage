@@ -1,6 +1,6 @@
 /* global process */
 
-var puppeteer = require('puppeteer');
+var { chromium } = require('playwright');
 var callNextTick = require('call-next-tick');
 var Jimp = require('jimp');
 var VError = require('verror');
@@ -41,7 +41,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
   startBrowser();
 
   function startBrowser() {
-    puppeteer
+    chromium
       .launch(launchOpts)
       .then(onBrowser, handleRejectionDuringConstruction);
   }
@@ -101,7 +101,13 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     if (!browser) {
       conclude(new Error('Browser is closed. Cannot get a web image.'));
     } else {
-      browser.newPage().then(onPage, handleRejection);
+      let pageOpts = {
+        viewport: viewportOpts
+      };
+      if (supersampleOpts) {
+        pageOpts.deviceScaleFactor = 2;
+      }
+      browser.newPage(pageOpts).then(onPage, handleRejection);
     }
 
     function onPage(thePage) {
@@ -125,9 +131,10 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       function loadPage(loadDone) {
         var needToCallDone = true;
 
-        setViewport(viewportOpts, supersampleOpts)
-          .then(loadContent, handleRejection)
-          .then(callWaitForLoadCompletion, handleRejection);
+        loadContent(handleRejection).then(
+          callWaitForLoadCompletion,
+          handleRejection
+        );
 
         function callWaitForLoadCompletion() {
           waitForLoadCompletion(loadSuccess);
@@ -285,33 +292,6 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     function handleRejection(error) {
       // console.log('Rejection!')
       conclude(error);
-    }
-
-    function setViewport(viewportOpts, supersampleOpts) {
-      var hasValidViewportOpts =
-        viewportOpts &&
-        !isNaN(viewportOpts.width) &&
-        !isNaN(viewportOpts.height);
-
-      // We need to set the viewport's deviceScaleFactor if we are going to supersample.
-      if (supersampleOpts) {
-        if (hasValidViewportOpts) {
-          if (viewportOpts.deviceScaleFactor) {
-            viewportOpts.deviceScaleFactor *= 2;
-          } else {
-            viewportOpts.deviceScaleFactor = 2;
-          }
-        } else {
-          viewportOpts = page.viewport();
-          viewportOpts.deviceScaleFactor = 2;
-        }
-      }
-
-      if (hasValidViewportOpts) {
-        return page.setViewport(viewportOpts);
-      } else {
-        return Promise.resolve();
-      }
     }
 
     function onDisconnect() {

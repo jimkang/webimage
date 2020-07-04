@@ -19,6 +19,7 @@
   "homepage": "https://github.com/jimkang/webimage",
   "devDependencies": {
     "assert-no-error": "^1.0.0",
+    "eslint": "^7.4.0",
     "longjohn": "^0.2.12",
     "rimraf": "^2.6.2",
     "tape": "^5.0.1"
