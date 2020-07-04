@@ -28,8 +28,7 @@ var testCases = [
     },
     viewportOpts: {
       width: 320,
-      height: 480,
-      deviceScaleFactor: 1
+      height: 480
     }
     // TODO: File diff.
   },
@@ -47,8 +46,7 @@ var testCases = [
     },
     viewportOpts: {
       width: 1280,
-      height: 720,
-      deviceScaleFactor: 1
+      height: 720
     }
     // TODO: File diff.
   },
@@ -110,6 +108,8 @@ function useWebimage(error, webimage) {
           encoding: 'utf8'
         });
       }
+
+      const start = process.hrtime();
       webimage.getImage(
         {
           html,
@@ -123,6 +123,14 @@ function useWebimage(error, webimage) {
       );
 
       function checkResult(error, buffer) {
+        const elapsed = process.hrtime(start);
+        console.log(
+          'Test took',
+          elapsed[0],
+          'seconds and',
+          elapsed[1],
+          'nanoseconds.'
+        );
         assertNoError(t.ok, error, 'No error while getting image.');
         t.ok(buffer.length > 0, 'buffer is not empty.');
         var ext = '.png';
