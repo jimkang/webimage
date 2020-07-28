@@ -23,12 +23,13 @@ var jimpModesForResizeModes = {
   bezier: Jimp.RESIZE_BEZIER
 };
 
-const browserType = 'webkit';
+const defaultBrowserType = 'chromium';
 
 function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
   var constructorDone = possibleConstructorDone;
   var launchOpts;
   var browser;
+  var browserType = defaultBrowserType;
   var shuttingDown = false;
 
   if (typeof launchOptsOrConstructorDone === 'function') {
@@ -38,6 +39,9 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     typeof launchOptsOrConstructorDone === 'object'
   ) {
     launchOpts = launchOptsOrConstructorDone;
+    if (launchOptsOrConstructorDone.browserType) {
+      browserType = launchOptsOrConstructorDone.browserType;
+    }
   }
 
   startBrowser();
