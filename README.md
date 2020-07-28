@@ -1,6 +1,8 @@
 webimage
 ==================
 
+![Node.js CI](https://github.com/jimkang/webimage/workflows/Node.js%20CI/badge.svg)
+
 Takes some html (with whatever you want embedded in it) and changes it into an image via headless webkit. Callback-based convenience wrapper for [playwright](https://github.com/microsoft/playwright). Also accepts urls.
 
 Installation
