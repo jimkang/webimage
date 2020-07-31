@@ -1,6 +1,6 @@
 {
   "name": "webimage",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Takes some html (with whatever you want embedded in it) and changes it into an image via headless Chrome.",
   "main": "index.js",
   "scripts": {
@@ -29,7 +29,7 @@
     "call-next-tick": "^2.0.1",
     "d3-array": "^2.3.1",
     "d3-queue": "^3.0.7",
-    "gif.js": "github:jnordberg/gif.js",
+    "gif.js": "^0.2.0",
     "jimp": "^0.5.3",
     "lodash.curry": "^4.1.1",
     "playwright": "^1.1.1",
