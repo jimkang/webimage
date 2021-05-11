@@ -30,7 +30,7 @@
     "d3-array": "^2.3.1",
     "d3-queue": "^3.0.7",
     "gif.js": "^0.2.0",
-    "jimp": "^0.5.3",
+    "jimp": "^0.16.1",
     "lodash.curry": "^4.1.1",
     "playwright": "^1.1.1",
     "standard-bail": "^2.0.1",
