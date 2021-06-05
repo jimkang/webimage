@@ -32,7 +32,7 @@
     "gif.js": "^0.2.0",
     "jimp": "^0.16.1",
     "lodash.curry": "^4.1.1",
-    "playwright": "^1.1.1",
+    "playwright": "^1.11.1",
     "standard-bail": "^2.0.1",
     "verror": "^1.10.0"
   }
