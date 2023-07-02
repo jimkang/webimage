@@ -5,6 +5,8 @@ webimage
 
 Takes some html (with whatever you want embedded in it) and changes it into an image via headless webkit. Callback-based convenience wrapper for [playwright](https://github.com/microsoft/playwright). Also accepts urls.
 
+Version 3.0 requires Node 14 or later. Earlier versions require Node 12.
+
 Installation
 ------------
 

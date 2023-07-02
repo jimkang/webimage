@@ -30,9 +30,10 @@
     "d3-array": "^2.3.1",
     "d3-queue": "^3.0.7",
     "gif.js": "^0.2.0",
-    "jimp": "^0.16.1",
+    "jimp": "^0.22.8",
     "lodash.curry": "^4.1.1",
-    "playwright": "^1.11.1",
+    "minimist": "^1.2.8",
+    "playwright": "^1.35.1",
     "standard-bail": "^2.0.1",
     "verror": "^1.10.0"
   }
