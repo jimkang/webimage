@@ -137,7 +137,10 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       function loadPage(loadDone) {
         var needToCallDone = true;
 
-        loadContent(handleRejection).then(
+        Promise.race([
+          loadContent(handleRejection),
+          stall(waitLimit)
+        ]).then(
           callWaitForLoadCompletion,
           handleRejection
         );
@@ -350,6 +353,10 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
 
 function convertDiffToMS(hrDiff) {
   return hrDiff[0] * 1000 + hrDiff[1] / nsInMS;
+}
+
+async function stall(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 module.exports = Webimage;

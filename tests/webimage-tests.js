@@ -132,7 +132,7 @@ function useWebimage(error, webimage) {
           'nanoseconds.'
         );
         assertNoError(t.ok, error, 'No error while getting image.');
-        t.ok(buffer.length > 0, 'buffer is not empty.');
+        t.ok(buffer && buffer.length > 0, 'buffer is not empty.');
         var ext = '.png';
         if (
           testCase.supersampleOpts &&
