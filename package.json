@@ -33,7 +33,7 @@
     "jimp": "^0.22.8",
     "lodash.curry": "^4.1.1",
     "minimist": "^1.2.8",
-    "playwright": "^1.35.1",
+    "playwright": "^1.44.0",
     "standard-bail": "^2.0.1",
     "verror": "^1.10.0"
   }
