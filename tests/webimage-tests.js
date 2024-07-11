@@ -15,6 +15,25 @@ process.on('unhandledRejection', reportUnhandledRejection);
 
 var testCases = [
   {
+    name: 'waitForFunction',
+    url: 'https://smidgeo.com',
+    waitForFunctionOpts: {
+      pageFunction(selector) {
+        var selectorSuccess = !!document.querySelector(selector);
+        // var el = document.querySelector('.chart');
+        var el = document.querySelector('.third');
+        // el.innerHTML = '<circle r="200" cx="200" cy="200"></circle>';
+        el.innerHTML = 'Hay';
+        return selectorSuccess;
+      },
+      arg: 'body > * > * > * > *',
+      options: {
+        polling: 500,
+        timeout: 5000
+      }
+    }
+  },
+  {
     name: 'Smidgeo sample',
     htmlFile: 'sample.html',
     screenshotOpts: {
@@ -117,7 +136,8 @@ function useWebimage(error, webimage) {
           screenshotOpts: testCase.screenshotOpts,
           viewportOpts: testCase.viewportOpts,
           supersampleOpts: testCase.supersampleOpts,
-          autocrop: testCase.autocrop
+          autocrop: testCase.autocrop,
+          waitForFunctionOpts: testCase.waitForFunctionOpts
         },
         checkResult
       );

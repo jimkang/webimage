@@ -94,7 +94,8 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       burstCount = 1,
       timeBetweenBursts = 1000 / 30,
       debug = false,
-      makeBurstsIntoAnimatedGif = false
+      makeBurstsIntoAnimatedGif = false,
+      waitForFunctionOpts
     },
     getImageDone
   ) {
@@ -130,6 +131,13 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         if (error) {
           conclude(error);
         } else {
+          if (waitForFunctionOpts) {
+            page.waitForFunction(
+              waitForFunctionOpts.pageFunction, waitForFunctionOpts.arg, waitForFunctionOpts.options
+            )
+              .then(() => getImagesFromLoadedPage(conclude))
+              .catch(conclude);
+          }
           getImagesFromLoadedPage(conclude);
         }
       }
@@ -242,7 +250,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       if (html) {
         return page.setContent(html);
       } else {
-        return page.goto(url, { waitUntil: 'networkidle0' });
+        return page.goto(url);
       }
     }
 
