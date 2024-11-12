@@ -101,6 +101,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
   ) {
     var concluded = false;
     browser.on('disconnected', onDisconnect);
+    console.log('screenshotOpts', screenshotOpts);
 
     var page;
 
@@ -114,10 +115,10 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       if (supersampleOpts) {
         pageOpts.deviceScaleFactor = 2;
       }
-      browser.newPage(pageOpts).then(onPage, handleRejection);
+      browser.newPage(pageOpts).then(thePage => onPage(thePage, screenshotOpts ? screenshotOpts.type : undefined), handleRejection);
     }
 
-    function onPage(thePage) {
+    function onPage(thePage, screenshotOptsImageType) {
       page = thePage;
       page.on('error', conclude);
 
@@ -196,7 +197,19 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
           } else {
             if (images.length === 1) {
               // Pass back a single buffer.
-              encodeImage(images[0], imagesGotDone);
+              let imageNeedsEncoding = true;
+              if (screenshotOptsImageType) {
+                imageNeedsEncoding = false;
+                if (supersampleOpts.desiredBufferType && supersampleOpts.desiredBufferType !== screenshotsOptsImageType) {
+                  imageNeedsEncoding = true;
+                }
+              }
+
+              if (imageNeedsEncoding) {
+                encodeImage(images[0], imagesGotDone);
+              } else {
+                imagesGotDone(null, images[0]);
+              }
             } else {
               if (makeBurstsIntoAnimatedGif) {
                 rawImagesToAnimatedGif(
