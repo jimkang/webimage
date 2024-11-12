@@ -102,7 +102,6 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
   ) {
     var concluded = false;
     browser.on('disconnected', onDisconnect);
-    console.log('screenshotOpts', screenshotOpts);
 
     var page;
 
