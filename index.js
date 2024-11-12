@@ -95,7 +95,8 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       timeBetweenBursts = 1000 / 30,
       debug = false,
       makeBurstsIntoAnimatedGif = false,
-      waitForFunctionOpts
+      waitForFunctionOpts,
+      pdfOpts
     },
     getImageDone
   ) {
@@ -115,10 +116,10 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       if (supersampleOpts) {
         pageOpts.deviceScaleFactor = 2;
       }
-      browser.newPage(pageOpts).then(thePage => onPage(thePage, screenshotOpts ? screenshotOpts.type : undefined), handleRejection);
+      browser.newPage(pageOpts).then(thePage => onPage(thePage, screenshotOpts ? screenshotOpts.type : undefined, pdfOpts), handleRejection);
     }
 
-    function onPage(thePage, screenshotOptsImageType) {
+    function onPage(thePage, screenshotOptsImageType, pdfOpts) {
       page = thePage;
       page.on('error', conclude);
 
@@ -198,13 +199,14 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
             if (images.length === 1) {
               // Pass back a single buffer.
               let imageNeedsEncoding = true;
-              if (screenshotOptsImageType) {
+              if (pdfOpts) {
+                imageNeedsEncoding = false;
+              } else if (screenshotOptsImageType) {
                 imageNeedsEncoding = false;
                 if (supersampleOpts.desiredBufferType && supersampleOpts.desiredBufferType !== screenshotsOptsImageType) {
                   imageNeedsEncoding = true;
                 }
               }
-
               if (imageNeedsEncoding) {
                 encodeImage(images[0], imagesGotDone);
               } else {
@@ -236,7 +238,11 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       // Possible optimization: Do resizes in parallel with screenshotting.
       function getImageFromLoadedPage(imageGetDone) {
         if (page) {
-          page.screenshot(screenshotOpts).then(callOps, imageGetDone);
+          if (pdfOpts) {
+            page.pdf(pdfOpts).then(buffer => imageGetDone(null, buffer)).catch(imageGetDone);
+          } else {
+            page.screenshot(screenshotOpts).then(callOps, imageGetDone);
+          }
         } else {
           callNextTick(
             imageGetDone,

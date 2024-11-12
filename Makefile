@@ -4,6 +4,7 @@ test:
 	node tests/burst-tests.js
 	node tests/raw-to-gif-tests.js
 	node tests/gif-tests.js
+	node tests/pdf-tests.js
 
 pushall:
 	git push origin master && npm publish
