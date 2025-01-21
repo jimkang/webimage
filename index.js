@@ -202,7 +202,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
                 imageNeedsEncoding = false;
               } else if (screenshotOptsImageType) {
                 imageNeedsEncoding = false;
-                if (supersampleOpts.desiredBufferType && supersampleOpts.desiredBufferType !== screenshotsOptsImageType) {
+                if (supersampleOpts.desiredBufferType && supersampleOpts.desiredBufferType !== screenshotOptsImageType) {
                   imageNeedsEncoding = true;
                 }
               }
