@@ -96,6 +96,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       debug = false,
       makeBurstsIntoAnimatedGif = false,
       waitForFunctionOpts,
+      waitForPageEvent,
       pdfOpts
     },
     getImageDone
@@ -128,16 +129,21 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
         conclude(new Error('No html or url given to getImage.'));
       }
 
-      function evaluatePageLoad(error) {
+      async function evaluatePageLoad(error) {
         if (error) {
           conclude(error);
         } else {
-          if (waitForFunctionOpts) {
-            page.waitForFunction(
-              waitForFunctionOpts.pageFunction, waitForFunctionOpts.arg, waitForFunctionOpts.options
-            )
-              .then(() => getImagesFromLoadedPage(conclude))
-              .catch(conclude);
+          try {
+            if (waitForFunctionOpts) {
+              await page.waitForFunction(
+                waitForFunctionOpts.pageFunction, waitForFunctionOpts.arg, waitForFunctionOpts.options
+              );
+            }
+            if (waitForPageEvent) {
+              await page.evaluate(eventWaitPageFn, waitForPageEvent);
+            }
+          } catch (error) {
+            conclude(error);
           }
           getImagesFromLoadedPage(conclude);
         }
@@ -383,6 +389,14 @@ function convertDiffToMS(hrDiff) {
 
 async function stall(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function eventWaitPageFn(eventName) {
+  function executor(resolve) {
+    document.addEventListener(eventName, resolve, { once: true });
+  }
+
+  return new Promise(executor);
 }
 
 module.exports = Webimage;

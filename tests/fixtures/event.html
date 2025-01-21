@@ -1,0 +1,41 @@
+<html>
+<head>
+  <title>Event sample</title>
+  <style>
+    body {
+      font-family: futura;
+      font-size: 48px;
+    }
+
+    .header {
+      background-color: black;
+      color: white;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .hidden {
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      This text should not be in the screenshot.
+    </div>
+    <img src="http://smidgeo.com/images/smidgeo_headshot.jpg" />
+  </div>
+
+  <script>
+    var firstEvent = new CustomEvent('firstEvent');
+    var secondEvent = new CustomEvent('secondEvent');
+
+    document.dispatchEvent(firstEvent);
+    setTimeout(() => document.querySelector('.header').classList.add('hidden'), 3000);
+    setTimeout(() => document.dispatchEvent(secondEvent), 3500);
+  </script>
+</body>
+</html>

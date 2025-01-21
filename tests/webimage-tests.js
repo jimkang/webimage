@@ -34,6 +34,20 @@ var testCases = [
     }
   },
   {
+    // After this test runs, you need to check the screenshot to make sure "This text should not be in the screenshot" is not in it.
+    name: 'waitForPageEvent',
+    htmlFile: 'event.html',
+    screenshotOpts: {
+      clip: {
+        x: 0,
+        y: 0,
+        width: 1280,
+        height: 720
+      },
+    },
+    waitForPageEvent: 'secondEvent'
+  },
+  {
     name: 'Smidgeo sample',
     htmlFile: 'sample.html',
     screenshotOpts: {
@@ -137,7 +151,8 @@ function useWebimage(error, webimage) {
           viewportOpts: testCase.viewportOpts,
           supersampleOpts: testCase.supersampleOpts,
           autocrop: testCase.autocrop,
-          waitForFunctionOpts: testCase.waitForFunctionOpts
+          waitForFunctionOpts: testCase.waitForFunctionOpts,
+          waitForPageEvent: testCase.waitForPageEvent
         },
         checkResult
       );

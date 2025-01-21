@@ -120,6 +120,8 @@ If you'd like to produce a single animated gif from the bursts instead of severa
 
 - `makeBurstsIntoAnimatedGif: true`. This is currently slightly wonky, though; it produces gifs that are viewable in Firefox and Chrome, but Gimp says they're invalid.
 
+If you want to wait until an event on the page fires before taking the screenshot, provide the event name in the `waitForPageEvent` opt.
+
 ## A note on Chromium vs. Webkit
 
 This is far from scientific, but anecdotally, they seem about the same in terms of speed. Here's some measured test run times from a couple runs of `webimage-tests.js` on an Ubuntu laptop.
