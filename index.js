@@ -102,7 +102,6 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     getImageDone
   ) {
     var concluded = false;
-    browser.on('disconnected', onDisconnect);
 
     var page;
 
@@ -110,6 +109,7 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     if (!browser) {
       conclude(new Error('Browser is closed. Cannot get a web image.'));
     } else {
+      browser.on('disconnected', onDisconnect);
       let pageOpts = {
         viewport: viewportOpts
       };
@@ -345,7 +345,9 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     function conclude(error, buffer) {
       if (!concluded) {
         concluded = true;
-        browser.removeListener('disconnected', onDisconnect);
+        if (browser) {
+          browser.removeListener('disconnected', onDisconnect);
+        }
 
         cleanUpPage(callDone);
       }
