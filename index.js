@@ -97,7 +97,8 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
       makeBurstsIntoAnimatedGif = false,
       waitForFunctionOpts,
       waitForPageEvent,
-      pdfOpts
+      pdfOpts,
+      stopOnPageError = false
     },
     getImageDone
   ) {
@@ -122,6 +123,9 @@ function Webimage(launchOptsOrConstructorDone, possibleConstructorDone) {
     function onPage(thePage, screenshotOptsImageType, pdfOpts) {
       page = thePage;
       page.on('error', conclude);
+      if (stopOnPageError) {
+        page.on('pageerror', conclude);
+      }
 
       if (html || url) {
         loadPage(evaluatePageLoad);
